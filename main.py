@@ -13,7 +13,7 @@ def send_welcome(message):
     bot.reply_to(message, "Welcome to BlackJack Bot! Type /play to start playing!")
 
 @bot.message_handler(commands=["play"])
-def start_black_jack(message):
+def start_game(message):
     player_id = str(message.from_user.id)
     if player_id not in current_games:
         current_games[player_id] = BlackJackGame(player_id, bot)
@@ -31,6 +31,7 @@ def handle_bet(message):
         if game.game_state == "BET":
             if amount > 0 and amount < game.player.money:
                 game.player.money -= amount
+                game.player.bet = amount
                 bot.reply_to(message, "You've bet: " + message.text + " coins")
                 game.game_state = "FIRST_ROUND"
                 game.start_black_jack_round()
@@ -40,13 +41,19 @@ def handle_bet(message):
             bot.reply_to(message, "You can't bet currently")
 
 @bot.callback_query_handler(func = lambda call: True)
-def handle_inline(call):
+def handle_query(call):
+    bot.answer_callback_query(call.id)
     player_id = str(call.from_user.id)
     action = call.data
-    print(action)
     if player_id in current_games:
-        current_games[player_id].update_black_jack_round(action)
-    bot.answer_callback_query(call.id)
+        if call.data in ["hit", "stand", "double"]:
+            current_games[player_id].update_black_jack_round(action)
+        elif call.data == "new_game_yes":
+            current_games[player_id].reset_table()
+            current_games[player_id].shuffle_deck(65)
+            current_games[player_id].start_black_jack_round()
+        elif call.data == "new_game_no":
+            del current_games[player_id]
 
 def main():
     bot.infinity_polling()
