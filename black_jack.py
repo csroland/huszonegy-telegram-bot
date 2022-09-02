@@ -87,17 +87,17 @@ class BlackJackGame:
                 match action:
                     case "hit":
                         self.player.cards.extend(self.deck.draw(1))
-                        self.bot.edit_message_text(self.gen_game_edit(), self.player_id, self.game_message_id, reply_markup = other_round_markup)
+                        self.update_game_text(other_round_markup)
                         self.update_black_jack_round()
                         return
                     case "stand":
-                        self.bot.edit_message_text(self.gen_game_edit(), self.player_id, self.game_message_id, reply_markup = other_round_markup)
+                        self.update_game_text(other_round_markup)
                         self.player.finished = True
                         self.dealer.finished = True
                         self.update_black_jack_round()
                         return
                     case "double":
-                        self.bot.edit_message_text(self.gen_game_edit(), self.player_id, self.game_message_id, reply_markup = other_round_markup)
+                        self.update_game_text(other_round_markup)
                         self.player.money -= self.player.bet
                         self.player.bet *= 2
                         self.update_black_jack_round()
@@ -149,13 +149,16 @@ class BlackJackGame:
             self.play_again()
             return
 
-    def update_game_text(self):
-        new = gen_game_edit()
+    def update_game_text(self, markup):
+        """
+        Check if the game text has changed, if yes, update it
+        """
+        new = self.gen_game_edit()
         if new == self.game_message_text:
             pass
         else:
             self.game_message_text = new
-            self.bot.edit_message_text(self.game_message_text, self.player_id, self.game_message_id)
+            self.bot.edit_message_text(self.game_message_text, self.player_id, self.game_message_id, reply_markup = markup)
 
     def print_stats(self):
         """
@@ -185,6 +188,7 @@ class BlackJackGame:
         Resets the table after the round is over
         """
         self.player.bet = 0
+        self.game_state = "BET"
         self.deck.out.extend(self.player.cards)
         self.deck.out.extend(self.dealer.cards)
         self.player.cards, self.dealer.cards = [], []
@@ -218,10 +222,7 @@ class BlackJackGame:
         return value
 
     def play_again(self) -> None:
-        self.bot.send_message(self.player_id, "Do you want to play another round?", reply_markup = new_game_markup)
-
-    # def game_loop(self) -> bool:
-    #     self.update_black_jack_round()
-    #     self.reset_table()
-    #     self.shuffle_deck(65)
-    #     return self.play_again()
+        """
+        Ask the player if it wants to play again?
+        """
+        self.bot.send_message(self.player_id, "Another round?", reply_markup = new_game_markup)

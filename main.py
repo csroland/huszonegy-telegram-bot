@@ -42,6 +42,7 @@ def handle_bet(message):
 
 @bot.callback_query_handler(func = lambda call: True)
 def handle_query(call):
+    print(call)
     bot.answer_callback_query(call.id)
     player_id = str(call.from_user.id)
     action = call.data
@@ -49,10 +50,12 @@ def handle_query(call):
         if call.data in ["hit", "stand", "double"]:
             current_games[player_id].update_black_jack_round(action)
         elif call.data == "new_game_yes":
+            bot.edit_message_text("Place your bet!", player_id, call.message.id)
             current_games[player_id].reset_table()
             current_games[player_id].shuffle_deck(65)
             current_games[player_id].start_black_jack_round()
         elif call.data == "new_game_no":
+            bot.edit_message_text("See you soon!",  player_id, call.message.id)
             del current_games[player_id]
 
 def main():
