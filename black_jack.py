@@ -42,8 +42,7 @@ class BlackJackGame:
         for i in range(2):
             self.player.cards.extend(self.deck.draw(1))
             self.dealer.cards.extend(self.deck.draw(1))
-        first_msg_string = "".join(["<b>Dealer:</b>\n", self.dealer.cards[0], " ??\n\n", "<b>Your cards:</b>\n", self.player.cards[0], " ", self.player.cards[1]])
-        self.game_message_id = self.bot.send_message(self.player_id, first_msg_string, reply_markup = first_round_markup).message_id
+        self.game_message_id = self.bot.send_message(self.player_id, self.gen_game_edit(), reply_markup = first_round_markup).message_id
         hand_value = self.bj_hand_value(self.player.cards)
         dealer_value = self.bj_hand_value(self.dealer.cards)
         if dealer_value == 21:
@@ -67,6 +66,7 @@ class BlackJackGame:
         elif hand_value == 21:
             self.player.finished = True
             self.dealer.finished = True
+            self.player.money += 2*self.bet
             self.print_stats()
             self.bot.edit_message_text(self.gen_game_edit(), self.player_id, self.game_message_id)
             print("You Won!")
@@ -91,15 +91,15 @@ class BlackJackGame:
                         self.update_black_jack_round()
                         return
                     case "stand":
-                        self.update_game_text(other_round_markup)
                         self.player.finished = True
                         self.dealer.finished = True
+                        self.update_game_text(other_round_markup)
                         self.update_black_jack_round()
                         return
                     case "double":
-                        self.update_game_text(other_round_markup)
                         self.player.money -= self.player.bet
                         self.player.bet *= 2
+                        self.update_game_text(other_round_markup)
                         self.update_black_jack_round()
                         return
                     case "":
@@ -175,13 +175,15 @@ class BlackJackGame:
             line_1 = "<b>Dealer: </b>" + str(self.bj_hand_value(self.dealer.cards)) + "\n"
             line_2 = " ".join(self.dealer.cards) + "\n\n"
             line_3 = "<b>Your cards: </b>" + str(self.bj_hand_value(self.player.cards)) + "\n"
-            line_4 = " ".join(self.player.cards)
+            line_4 = " ".join(self.player.cards+ ["\n\n"])
+            line_5 = "<b>Balance: </b>" + str(self.player.money) 
         else:
             line_1 = "<b>Dealer:</b>\n"
             line_2 = self.dealer.cards[0] + " ??" + "\n\n"
             line_3 = "<b>Your cards: </b>" + str(self.bj_hand_value(self.player.cards)) + "\n"
-            line_4 = " ".join(self.player.cards)
-        return "".join([line_1, line_2, line_3, line_4])
+            line_4 = " ".join(self.player.cards + ["\n\n"])
+            line_5 = "<b>Balance: </b>" + str(self.player.money) 
+        return "".join([line_1, line_2, line_3, line_4, line_5])
 
     def reset_table(self) -> None:
         """

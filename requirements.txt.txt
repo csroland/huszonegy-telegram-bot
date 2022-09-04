@@ -1,0 +1,3 @@
+#requirements:
+python-dotenv
+pyTelegramBotAPI == 4.7.0
