@@ -21,14 +21,14 @@ class Player:
         self.finished = False
 
 class BlackJackGame:
-    def __init__(self, player_id: str, bot):
+    def __init__(self, player_id: str, bot, player_money: int):
         """
         Starts the game by initializing the deck, the player and the dealer, starting in 'BET' state
         """
         self.deck = CardDeck(FRENCH, 6)
         self.deck.shuffle_deck()
         self.player_id = player_id
-        self.player = Player(self.player_id, 1000) #placeholder money
+        self.player = Player(self.player_id, player_money) #placeholder money
         self.dealer = Player("Dealer", 0)
         self.bot = bot
         self.game_message_id = None
@@ -66,7 +66,7 @@ class BlackJackGame:
         elif hand_value == 21:
             self.player.finished = True
             self.dealer.finished = True
-            self.player.money += 2*self.bet
+            self.player.money += 2*self.player.bet
             self.print_stats()
             self.bot.edit_message_text(self.gen_game_edit(), self.player_id, self.game_message_id)
             print("You Won!")
@@ -97,6 +97,9 @@ class BlackJackGame:
                         self.update_black_jack_round()
                         return
                     case "double":
+                        self.player.finished = True
+                        self.dealer.finished = True
+                        self.player.cards.extend(self.deck.draw(1))
                         self.player.money -= self.player.bet
                         self.player.bet *= 2
                         self.update_game_text(other_round_markup)
@@ -107,13 +110,13 @@ class BlackJackGame:
                     case _:
                         print("unkown")
                         return
-            elif hand_value > 21:
-                self.player.finished = True
-                self.bot.edit_message_text(self.gen_game_edit(), self.player_id, self.game_message_id)
-                self.bot.send_message(self.player_id, "You lose!")
-                print("Bust!")
-                self.play_again()
-                return
+        if hand_value > 21:
+            self.player.finished = True
+            self.bot.edit_message_text(self.gen_game_edit(), self.player_id, self.game_message_id)
+            self.bot.send_message(self.player_id, "You bust!")
+            print("Bust!")
+            self.play_again()
+            return
         self.dealer.finished = True
         self.bot.edit_message_text(self.gen_game_edit(), self.player_id, self.game_message_id)
         while self.bj_hand_value(self.dealer.cards) < 17:
@@ -125,13 +128,13 @@ class BlackJackGame:
             self.print_stats()
             print("Dealer bust!")
             self.player.money += 2*self.player.bet
-            self.bot.send_message(self.player_id, "You won!")
+            self.bot.send_message(self.player_id, "Dealer bust, you won!")
             self.play_again()
             return
         if dealer_value > hand_value:
             self.print_stats()
             print("Dealer won!")
-            self.bot.send_message(self.player_id, "You lost!")
+            self.bot.send_message(self.player_id, "Dealer won, you lost!")
             self.play_again()
             return
         elif dealer_value == hand_value:

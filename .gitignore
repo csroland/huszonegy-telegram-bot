@@ -3,3 +3,4 @@ __pycache__/black_jack.cpython-310.pyc
 __pycache__/cards.cpython-310.pyc
 .env
 huszonegy-telegram-bot.code-workspace
+player_database.db

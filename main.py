@@ -1,7 +1,6 @@
 from black_jack import *
-import telebot
+import telebot, os, sqlite3
 from dotenv import load_dotenv
-import os
 
 current_games = {}
 
@@ -57,6 +56,7 @@ def handle_query(call):
             bot.edit_message_text("See you soon!",  player_id, call.message.id)
 
 def main():
+    
     bot.infinity_polling()
 
 if __name__ == "__main__":
